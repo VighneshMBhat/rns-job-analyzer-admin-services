@@ -34,6 +34,10 @@ export const SERVICE_DISPLAY_NAMES: Record<string, { name: string; description: 
         name: 'GitHub OAuth',
         description: 'GitHub authentication'
     },
+    apify: {
+        name: 'Apify',
+        description: 'Reddit scraping for discussions'
+    },
     aws: {
         name: 'AWS',
         description: 'S3 storage for reports'
