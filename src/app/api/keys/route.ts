@@ -12,11 +12,13 @@ export async function GET() {
             .order('service_name', { ascending: true });
 
         if (error) {
+            console.error('Supabase GET error:', error);
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        return NextResponse.json({ keys: data });
+        return NextResponse.json({ keys: data || [] });
     } catch (error) {
+        console.error('GET keys error:', error);
         return NextResponse.json({ error: 'Failed to fetch keys' }, { status: 500 });
     }
 }
@@ -26,6 +28,8 @@ export async function PUT(request: NextRequest) {
     try {
         const body = await request.json();
         const { id, key_value, is_active } = body;
+
+        console.log('PUT request body:', { id, key_value: key_value ? '[REDACTED]' : 'empty', is_active });
 
         if (!id) {
             return NextResponse.json({ error: 'Key ID is required' }, { status: 400 });
@@ -46,6 +50,8 @@ export async function PUT(request: NextRequest) {
             updateData.is_active = is_active;
         }
 
+        console.log('Updating with data:', { ...updateData, key_value: updateData.key_value ? '[REDACTED]' : 'empty' });
+
         const { data, error } = await supabase
             .from('admin_api_keys')
             .update(updateData)
@@ -54,11 +60,14 @@ export async function PUT(request: NextRequest) {
             .single();
 
         if (error) {
+            console.error('Supabase UPDATE error:', error);
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
+        console.log('Update successful for key:', data?.key_name);
         return NextResponse.json({ key: data, message: 'Key updated successfully' });
     } catch (error) {
+        console.error('PUT keys error:', error);
         return NextResponse.json({ error: 'Failed to update key' }, { status: 500 });
     }
 }
@@ -88,11 +97,13 @@ export async function POST(request: NextRequest) {
             .single();
 
         if (error) {
+            console.error('Supabase INSERT error:', error);
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
         return NextResponse.json({ key: data, message: 'Key created successfully' });
     } catch (error) {
+        console.error('POST keys error:', error);
         return NextResponse.json({ error: 'Failed to create key' }, { status: 500 });
     }
 }
@@ -115,11 +126,13 @@ export async function DELETE(request: NextRequest) {
             .eq('id', id);
 
         if (error) {
+            console.error('Supabase DELETE error:', error);
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
         return NextResponse.json({ message: 'Key deleted successfully' });
     } catch (error) {
+        console.error('DELETE keys error:', error);
         return NextResponse.json({ error: 'Failed to delete key' }, { status: 500 });
     }
 }
