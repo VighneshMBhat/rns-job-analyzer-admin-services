@@ -153,8 +153,19 @@ export default function DashboardPage() {
 
     const hasValueChanged = (serviceName: string, keyName: string): boolean => {
         const dbKey = getKeyFromDb(serviceName, keyName);
-        const currentValue = editValues[`${serviceName}_${keyName}`] || '';
-        return dbKey ? dbKey.key_value !== currentValue : false;
+        const currentValue = editValues[`${serviceName}_${keyName}`] ?? '';
+        const dbValue = dbKey?.key_value ?? '';
+        // Return true if values are different, or if there's a value but none in DB
+        return dbValue !== currentValue || (currentValue.length > 0 && dbValue.length === 0);
+    };
+
+    // Check if the input has any value (for enabling save button)
+    const canSave = (serviceName: string, keyName: string): boolean => {
+        const currentValue = editValues[`${serviceName}_${keyName}`] ?? '';
+        const dbKey = getKeyFromDb(serviceName, keyName);
+        const dbValue = dbKey?.key_value ?? '';
+        // Enable save if values are different
+        return currentValue !== dbValue;
     };
 
     return (
@@ -189,8 +200,8 @@ export default function DashboardPage() {
                 {/* Alert Message */}
                 {message && (
                     <div className={`mb-6 p-4 rounded-lg fixed top-20 right-4 z-50 shadow-lg ${message.type === 'success'
-                            ? 'bg-green-500/90 border border-green-400 text-white'
-                            : 'bg-red-500/90 border border-red-400 text-white'
+                        ? 'bg-green-500/90 border border-green-400 text-white'
+                        : 'bg-red-500/90 border border-red-400 text-white'
                         }`}>
                         {message.text}
                     </div>
@@ -234,7 +245,7 @@ export default function DashboardPage() {
                                         const fullKey = `${serviceName}_${keyConfig.key_name}`;
                                         const currentValue = editValues[fullKey] || '';
                                         const dbKey = getKeyFromDb(serviceName, keyConfig.key_name);
-                                        const hasChanged = hasValueChanged(serviceName, keyConfig.key_name);
+                                        const hasChanged = canSave(serviceName, keyConfig.key_name);
                                         const showValue = showPassword.has(fullKey);
 
                                         return (
@@ -296,8 +307,8 @@ export default function DashboardPage() {
                                                         onClick={() => saveKey(serviceName, keyConfig.key_name)}
                                                         disabled={savingKey === fullKey || !hasChanged}
                                                         className={`px-5 py-3 rounded-lg font-medium text-sm transition-all ${hasChanged
-                                                                ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                                                : 'bg-slate-700/50 text-gray-500 cursor-not-allowed'
+                                                            ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                                            : 'bg-slate-700/50 text-gray-500 cursor-not-allowed'
                                                             }`}
                                                     >
                                                         {savingKey === fullKey ? (
