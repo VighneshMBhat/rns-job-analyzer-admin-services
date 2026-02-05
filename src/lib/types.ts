@@ -17,6 +17,7 @@ export interface ServiceGroup {
     keys: ApiKey[];
 }
 
+// Only API keys that have rate limits/quotas (need Admin Portal management)
 export const SERVICE_DISPLAY_NAMES: Record<string, { name: string; description: string }> = {
     gemini: {
         name: 'Google Gemini AI',
@@ -30,20 +31,13 @@ export const SERVICE_DISPLAY_NAMES: Record<string, { name: string; description: 
         name: 'Groq Cloud',
         description: 'GitHub skill extraction'
     },
-    github: {
-        name: 'GitHub OAuth',
-        description: 'GitHub authentication'
-    },
     apify: {
         name: 'Apify',
         description: 'Reddit scraping for discussions'
-    },
-    aws: {
-        name: 'AWS',
-        description: 'S3 storage for reports'
-    },
-    email: {
-        name: 'Email/SMTP',
-        description: 'Notification emails'
     }
 };
+
+// Note: The following credentials are permanent and managed via Lambda env vars only:
+// - GitHub OAuth (GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET)
+// - AWS S3 (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+// - Email/SMTP (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, FROM_EMAIL)

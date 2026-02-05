@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
-// Define all the API keys we need with proper labels
+// Only API keys that have rate limits/quotas and may need to be rotated
 const API_KEY_CONFIG = {
     gemini: {
         name: 'Google Gemini AI',
-        description: 'AI model for skill gap analysis',
+        description: 'AI model for skill gap analysis (has usage quotas)',
         icon: '🤖',
         keys: [
             { key_name: 'GEMINI_API_KEY', label: 'Gemini API Key', placeholder: 'AIzaSy...', helpUrl: 'https://aistudio.google.com/app/apikey' }
@@ -16,7 +16,7 @@ const API_KEY_CONFIG = {
     },
     serp: {
         name: 'SERP API',
-        description: 'Google Jobs data fetching',
+        description: 'Google Jobs data fetching (has monthly limits)',
         icon: '🔍',
         keys: [
             { key_name: 'SERP_API_KEY', label: 'SERP API Key', placeholder: 'Enter your SERP API key', helpUrl: 'https://serpapi.com/' }
@@ -24,48 +24,18 @@ const API_KEY_CONFIG = {
     },
     groq: {
         name: 'Groq Cloud',
-        description: 'GitHub skill extraction using LLama',
+        description: 'GitHub skill extraction (has rate limits)',
         icon: '⚡',
         keys: [
             { key_name: 'GROQ_API_KEY', label: 'Groq API Key', placeholder: 'gsk_...', helpUrl: 'https://console.groq.com/keys' }
         ]
     },
-    github: {
-        name: 'GitHub OAuth',
-        description: 'GitHub authentication for repository access',
-        icon: '🐙',
-        keys: [
-            { key_name: 'GITHUB_CLIENT_ID', label: 'Client ID', placeholder: 'Ov23li...', helpUrl: 'https://github.com/settings/developers' },
-            { key_name: 'GITHUB_CLIENT_SECRET', label: 'Client Secret', placeholder: 'dc27cad7...', helpUrl: null }
-        ]
-    },
     apify: {
         name: 'Apify',
-        description: 'Reddit discussion scraping',
+        description: 'Reddit discussion scraping (has usage limits)',
         icon: '🕷️',
         keys: [
             { key_name: 'APIFY_API_TOKEN', label: 'Apify API Token', placeholder: 'apify_api_...', helpUrl: 'https://apify.com/' }
-        ]
-    },
-    aws: {
-        name: 'AWS S3',
-        description: 'Storage for PDF reports',
-        icon: '☁️',
-        keys: [
-            { key_name: 'AWS_ACCESS_KEY_ID', label: 'Access Key ID', placeholder: 'AKIA...', helpUrl: 'https://console.aws.amazon.com/iam/' },
-            { key_name: 'AWS_SECRET_ACCESS_KEY', label: 'Secret Access Key', placeholder: 'wJalrXUt...', helpUrl: null }
-        ]
-    },
-    email: {
-        name: 'Email / SMTP',
-        description: 'Notification emails',
-        icon: '📧',
-        keys: [
-            { key_name: 'SMTP_HOST', label: 'SMTP Host', placeholder: 'smtp.gmail.com', helpUrl: null },
-            { key_name: 'SMTP_PORT', label: 'SMTP Port', placeholder: '587', helpUrl: null },
-            { key_name: 'SMTP_USER', label: 'SMTP Username', placeholder: 'your@email.com', helpUrl: null },
-            { key_name: 'SMTP_PASSWORD', label: 'SMTP Password', placeholder: 'App password', helpUrl: null },
-            { key_name: 'FROM_EMAIL', label: 'From Email', placeholder: 'noreply@yourapp.com', helpUrl: null }
         ]
     }
 };
@@ -181,10 +151,6 @@ export default function DashboardPage() {
         });
     };
 
-    const isSecretField = (keyName: string): boolean => {
-        return keyName.includes('SECRET') || keyName.includes('PASSWORD') || keyName.includes('API_KEY') || keyName.includes('TOKEN');
-    };
-
     const hasValueChanged = (serviceName: string, keyName: string): boolean => {
         const dbKey = getKeyFromDb(serviceName, keyName);
         const currentValue = editValues[`${serviceName}_${keyName}`] || '';
@@ -195,7 +161,7 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
             {/* Header */}
             <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-10">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 rounded-full bg-purple-600/20 border border-purple-500/30 flex items-center justify-center">
@@ -219,7 +185,7 @@ export default function DashboardPage() {
             </header>
 
             {/* Main Content */}
-            <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Alert Message */}
                 {message && (
                     <div className={`mb-6 p-4 rounded-lg fixed top-20 right-4 z-50 shadow-lg ${message.type === 'success'
@@ -237,8 +203,8 @@ export default function DashboardPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <div className="text-sm text-blue-200">
-                            <p className="font-medium">Enter your API keys below to enable all services.</p>
-                            <p className="mt-1 text-blue-300/70">Changes take effect immediately. Click the link icons for help getting keys.</p>
+                            <p className="font-medium">Manage API keys that have usage limits or quotas.</p>
+                            <p className="mt-1 text-blue-300/70">Update these when limits are exceeded or keys need rotation. Changes take effect immediately.</p>
                         </div>
                     </div>
                 </div>
@@ -269,7 +235,6 @@ export default function DashboardPage() {
                                         const currentValue = editValues[fullKey] || '';
                                         const dbKey = getKeyFromDb(serviceName, keyConfig.key_name);
                                         const hasChanged = hasValueChanged(serviceName, keyConfig.key_name);
-                                        const isSecret = isSecretField(keyConfig.key_name);
                                         const showValue = showPassword.has(fullKey);
 
                                         return (
@@ -302,13 +267,13 @@ export default function DashboardPage() {
                                                 <div className="flex items-center space-x-2">
                                                     <div className="relative flex-1">
                                                         <input
-                                                            type={isSecret && !showValue ? 'password' : 'text'}
+                                                            type={!showValue ? 'password' : 'text'}
                                                             value={currentValue}
                                                             onChange={(e) => handleValueChange(serviceName, keyConfig.key_name, e.target.value)}
                                                             placeholder={keyConfig.placeholder}
                                                             className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all font-mono text-sm"
                                                         />
-                                                        {isSecret && currentValue && (
+                                                        {currentValue && (
                                                             <button
                                                                 type="button"
                                                                 onClick={() => toggleShowPassword(fullKey)}
@@ -330,7 +295,7 @@ export default function DashboardPage() {
                                                     <button
                                                         onClick={() => saveKey(serviceName, keyConfig.key_name)}
                                                         disabled={savingKey === fullKey || !hasChanged}
-                                                        className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${hasChanged
+                                                        className={`px-5 py-3 rounded-lg font-medium text-sm transition-all ${hasChanged
                                                                 ? 'bg-purple-600 hover:bg-purple-700 text-white'
                                                                 : 'bg-slate-700/50 text-gray-500 cursor-not-allowed'
                                                             }`}
@@ -356,8 +321,9 @@ export default function DashboardPage() {
 
                 {/* Footer Info */}
                 <div className="mt-8 p-4 bg-slate-800/30 rounded-lg text-center text-gray-400 text-sm">
-                    <p className="font-medium text-gray-300">Services using these keys:</p>
-                    <p className="mt-1">Skill Gap Analysis • Trend Collection • GitHub Sync • Reports & Notifications</p>
+                    <p className="font-medium text-gray-300">Services using these API keys:</p>
+                    <p className="mt-1">Skill Gap Analysis • Trend Collection • GitHub Sync</p>
+                    <p className="mt-3 text-xs text-gray-500">Other credentials (GitHub OAuth, AWS, SMTP) are configured via Lambda environment variables.</p>
                 </div>
             </main>
         </div>
